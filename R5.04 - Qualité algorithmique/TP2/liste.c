@@ -14,17 +14,22 @@ liste supprimerEnTete(liste l) {
     return next;
 }
 
-// liste recherche(liste elem, int val) {
-//     if (elem == NULL) {
-//         return NULL;
-//     }
-//     if (elem->val == val) {
-//         return elem;
-//     }
-//     else {
-//         return recherche(elem->next, val);
-//     }
-// }
+void supprimerListe(liste l) {
+    while (l!= NULL)
+        l = supprimerEnTete(l);
+}
+
+liste recherche(liste l, int val) {
+    if (l == NULL) {
+        return NULL;
+    }
+    if (l->val == val) {
+        return l;
+    }
+    else {
+        return recherche(l->suivant, val);
+    }
+}
 
 int longueur(liste l) {
     if (l == NULL) {
@@ -32,12 +37,3 @@ int longueur(liste l) {
     }
     return longueur(l->suivant) + 1;
 }
-
-// void print_maillon(liste elem) {
-//     printf("[");
-//     while (elem != NULL) {
-//         printf("%d, ", elem->val);
-//         elem = elem->next;
-//     }
-//     printf("]\n");
-// }
