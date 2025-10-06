@@ -52,6 +52,13 @@ struct balls
 	int vx;
 	int vy;
 };
+int collisionAABB(SDL_Rect a, SDL_Rect b) {
+    if (a.x + a.w < b.x) return 0; // trop à gauche
+    if (a.x > b.x + b.w) return 0; // trop à droite
+    if (a.y + a.h < b.y) return 0; // trop en haut
+    if (a.y > b.y + b.h) return 0; // trop en bas
+    return 1; // sinon, collision
+}
 
 int main() 
 {
@@ -131,7 +138,15 @@ int main()
 			if (tabBalls[i].position.y < 0) tabBalls[i].vy *= -1;
 			if (tabBalls[i].position.y + 64 > tailleFenetreH) tabBalls[i].vy *= -1;
 		}
-		
+
+        for (int i = 0; i < nbBalls; i++) {
+            for (int j = i+1; j < nbBalls; j++) {
+                nbTestsCollisions++;
+                if (collisionAABB(tabBalls[i].position, tabBalls[j].position)) {
+                    nbCollisions++;
+                }
+            }
+        }
 		/*
 			Gerons ici les colissions et a chaque collision ajouter 1 à la variable nbCollisions
 			Exemple avec la fonction de la SDL nbCollisions += SDL_HasIntersection(&shipPosition,&tabBalls[i].position);

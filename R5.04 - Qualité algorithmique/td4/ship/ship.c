@@ -51,6 +51,15 @@ struct astro
 	int delay;	
 };
 
+int collisionAABB(SDL_Rect a, SDL_Rect b) {
+    if (a.x + a.w < b.x) return 0; // trop à gauche
+    if (a.x > b.x + b.w) return 0; // trop à droite
+    if (a.y + a.h < b.y) return 0; // trop en haut
+    if (a.y > b.y + b.h) return 0; // trop en bas
+    return 1; // sinon, collision
+}
+
+
 int main() 
 {
 	SDL_Window * mafenetre; 		// Fenetre du programme
@@ -131,7 +140,7 @@ int main()
 			SDL_RenderCopy(renderer, tabAstro[i].texture,NULL,&tabAstro[i].position);
 			if (tabAstro[i].position.y > tailleFenetreH) tabAstro[i].position.y = -32;
 
-			nbCollisions += SDL_HasIntersection(&shipPosition,&tabAstro[i].position);			
+			nbCollisions += collisionAABB(shipPosition, tabAstro[i].position);			
 		}
 		
 		SDL_RenderCopy(renderer, texShip,NULL,&shipPosition);
