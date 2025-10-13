@@ -1,0 +1,5 @@
+MATCH (b:Beer{name:"Bohemia"})-[Likes]-(p:Drinker) - [Goes] - (n:Bar) where n.city ="Orleans" return p
+MATCH (b:Beer)-[Likes]-(p:Drinker)where b.name in ["Corona","Bohemia"] return b,p
+MATCH (p:Drinker) - [Goes] - (j:Bar) - [Sells] - (b:Beer) - [Likes] - (p) return p, j , b
+MATCH (p:Drinker) return avg(p.age)
+MATCH (p:Drinker{sexe:"M"}), (p2:Drinker{sexe:"F"}) return avg(p.age), avg(p2.age)
