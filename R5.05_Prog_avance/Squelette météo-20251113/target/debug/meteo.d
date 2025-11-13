@@ -1,0 +1,1 @@
+/home/iut45/Etudiants/o22306517/Bureau/BUT3/Squelette\ météo-20251113/target/debug/meteo: /home/iut45/Etudiants/o22306517/Bureau/BUT3/Squelette\ météo-20251113/src/main.rs /home/iut45/Etudiants/o22306517/Bureau/BUT3/Squelette\ météo-20251113/src/tests.rs

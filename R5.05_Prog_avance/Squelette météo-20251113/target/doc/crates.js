@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["meteo","proc_macro2","quote","serde","serde_core","serde_derive","syn","unicode_ident"];
