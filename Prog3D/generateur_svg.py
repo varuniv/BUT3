@@ -213,7 +213,54 @@ def Matrotation3DY(angle):
             (cos(angle), 0,sin(angle)),
             (0,1,0,),
             (-sin(angle),0, cos(angle)))
+def Matrotation3DX(angle):
+     return (
+            (1,0,0),
+            (0,cos(angle), -sin(angle)),
+            (0,sin(angle), cos(angle)))
+def Matrotation3DZ(angle):
+     return (
+            (cos(angle), -sin(angle),0),
+            (sin(angle), cos(angle),0),
+            (0,0,1))
 
 points_proj = [projection(centrage(sommet,(100,100,100))) for sommet in points ]
 compose(points_proj,cube)
+dessin.save()
+
+
+
+dessin = svgwrite.Drawing('cube_rotation.svg', size=(800,600))
+angle = pi / 15
+MatDiff=prodMatMat3D(Matrotation3DX(angle),Matrotation3DY(angle))
+MatModel3D=prodMatMat3D(MatDiff,Matdilatation3D(0.5))
+points_rotated = [prodMatVect3D(MatModel3D, sommet) for sommet in points ]
+points_proj = [projection(centrage(sommet,(100,100,100))) for sommet in points_rotated ]
+compose(points_proj,cube)
+dessin.save()
+
+
+dessin = svgwrite.Drawing('cube_rotation_en_z.svg', size=(800,600))
+angle = pi / 10
+MatDiff=prodMatMat3D(Matrotation3DX(angle),Matrotation3DY(angle))
+MatDiff=prodMatMat3D(MatDiff,Matrotation3DZ(angle))
+MatModel3D=prodMatMat3D(MatDiff,Matdilatation3D(0.5))
+points_rotated = [prodMatVect3D(MatModel3D, sommet) for sommet in points ]
+points_proj = [projection(centrage(sommet,(100,100,100))) for sommet in points_rotated ]
+compose(points_proj,cube)
+dessin.save()
+
+
+dessin = svgwrite.Drawing('cube_rotation_en_z_dilatation.svg', size=(800,600))
+angle = pi / 10
+translation=(200,200,200)
+for i in range(1,10):
+    angle_i= angle * i
+    MatDiff=prodMatMat3D(Matrotation3DX(angle+pi/6*i),Matrotation3DY(angle+pi/6*i))
+    MatDiff=prodMatMat3D(MatDiff,Matrotation3DZ(angle+pi/6*i))
+    MatModel3D=prodMatMat3D(MatDiff,Matdilatation3D(0.8**i))
+    points_rotated = [prodMatVect3D(MatModel3D, sommet) for sommet in points ]
+    points_proj = [projection(centrage(sommet,translation)) for sommet in points_rotated ]
+    compose(points_proj,cube)
+    translation=(translation[0]+50,200,200)
 dessin.save()
