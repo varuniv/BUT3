@@ -1,0 +1,19 @@
+Start testing: Dec 08 14:16 CET
+----------------------------------------------------------
+1/1 Testing: SimpleTest
+1/1 Test: SimpleTest
+Command: "/home/iut45/Etudiants/o22306517/Bureau/BUT3/Prog3D/canevasTD5/b/td"
+Directory: /home/iut45/Etudiants/o22306517/Bureau/BUT3/Prog3D/canevasTD5/b
+"SimpleTest" start time: Dec 08 14:16 CET
+Output:
+----------------------------------------------------------
+81006.42372
+<end of output>
+Test time =   7.84 sec
+----------------------------------------------------------
+Test Passed.
+"SimpleTest" end time: Dec 08 14:16 CET
+"SimpleTest" time elapsed: 00:00:07
+----------------------------------------------------------
+
+End testing: Dec 08 14:16 CET

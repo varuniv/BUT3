@@ -6,6 +6,8 @@ from keras import Sequential
 import matplotlib.pyplot as plt
 import numpy as np
 
+#source /opt/pytorch-env/bin/activate
+
 # # Architecture du réseau
 # modele = Sequential()
 # # Couches de neurones
@@ -44,7 +46,7 @@ import numpy as np
 
 Test = Sequential()
 Test.add(layers.Input(shape=(2,)))
-Test.add(layers.Dense(3, activation="sigmoid"))
+Test.add(lasource /opt/pytorch-env/bin/activateyers.Dense(3, activation="sigmoid"))
 Test.add(layers.Dense(1, activation="sigmoid"))
 
 Test.summary()
