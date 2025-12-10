@@ -29,6 +29,9 @@ repere rep(1.0);
 
 unsigned int progid;
 unsigned int mvpid;
+unsigned int idmodel;
+unsigned int idview;
+unsigned int idproj;
 
 // Matrices 4x4 contenant les transformations.
 glm::mat4 model;
@@ -86,6 +89,12 @@ void display()
     glUseProgram( progid );// Choix du shader à appliquer.
     
     glUniformMatrix4fv( mvpid , 1, GL_FALSE, &mvp[0][0]);// Passage de la matrice mvp au shader.
+
+    glUniformMatrix4fv(idproj , 1, GL_FALSE, &proj[0][0]);
+
+    glUniformMatrix4fv(idview , 1, GL_FALSE, &view[0][0]);
+
+    glUniformMatrix4fv(idmodel , 1, GL_FALSE, &model[0][0]);
 
     glBindVertexArray( vaoids[ 0 ] );//Choix du vao
 
@@ -153,7 +162,7 @@ void initVAOs()
 {
     unsigned int vboids[ 4 ];
 
-    std::ifstream ifs( concat(MY_SHADER_PATH, "/meshes/rabbit.off" ));
+    std::ifstream ifs( concat(MY_SHADER_PATH, "/meshes/milleniumfalcon.off/milleniumfalcon.off" ));
     if (!ifs)
     {
         throw std::runtime_error("can't find the meshe!! Check the name and the path of this file? ");
@@ -394,6 +403,9 @@ void initShaders()
     glUseProgram( progid );
 
     mvpid = glGetUniformLocation( progid, "mvp" );
+    idproj = glGetUniformLocation( progid, "proj" );
+    idview = glGetUniformLocation( progid, "view" );
+    idmodel = glGetUniformLocation( progid, "model" );
 }
 
 
