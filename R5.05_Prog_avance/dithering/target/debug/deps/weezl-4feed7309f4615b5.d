@@ -1,0 +1,10 @@
+/home/iut45/Etudiants/o22306517/Bureau/BUT3/R5.05_Prog_avance/dithering/target/debug/deps/libweezl-4feed7309f4615b5.rmeta: /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/lib.rs /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/decode.rs /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/encode.rs /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/error.rs
+
+/home/iut45/Etudiants/o22306517/Bureau/BUT3/R5.05_Prog_avance/dithering/target/debug/deps/libweezl-4feed7309f4615b5.rlib: /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/lib.rs /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/decode.rs /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/encode.rs /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/error.rs
+
+/home/iut45/Etudiants/o22306517/Bureau/BUT3/R5.05_Prog_avance/dithering/target/debug/deps/weezl-4feed7309f4615b5.d: /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/lib.rs /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/decode.rs /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/encode.rs /home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/error.rs
+
+/home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/lib.rs:
+/home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/decode.rs:
+/home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/encode.rs:
+/home/iut45/Etudiants/o22306517/.cargo/registry/src/index.crates.io-6f17d22bba15001f/weezl-0.1.12/src/error.rs:
