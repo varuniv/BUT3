@@ -1,1 +1,0 @@
-int sommeEntiers(int n);
