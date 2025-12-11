@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Ciel"],"fn":["decrit_ciel","main","que_porter","to_farenheit"],"mod":["tests"],"struct":["Meteo"]};
