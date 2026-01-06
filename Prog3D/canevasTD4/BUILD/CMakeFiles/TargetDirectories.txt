@@ -1,0 +1,5 @@
+/home/iut45/Etudiants/o22306517/Bureau/BUT3/Prog3D/canevasTD4/BUILD/CMakeFiles/td.dir
+/home/iut45/Etudiants/o22306517/Bureau/BUT3/Prog3D/canevasTD4/BUILD/CMakeFiles/check.dir
+/home/iut45/Etudiants/o22306517/Bureau/BUT3/Prog3D/canevasTD4/BUILD/CMakeFiles/test.dir
+/home/iut45/Etudiants/o22306517/Bureau/BUT3/Prog3D/canevasTD4/BUILD/CMakeFiles/edit_cache.dir
+/home/iut45/Etudiants/o22306517/Bureau/BUT3/Prog3D/canevasTD4/BUILD/CMakeFiles/rebuild_cache.dir
