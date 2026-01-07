@@ -2,6 +2,7 @@
 #include <vector>
 #include <array>
 #include <fstream>
+#include <sstream> 
 
 #if defined(__APPLE__)
 #define GL_SILENCE_DEPRECATION
@@ -75,10 +76,36 @@ struct maillage
 
 } maillages[NBMESHES];
 
-void displayMesh( unsigned int vaoid, glm::mat4 model )
+void displayMesh(maillage &m, glm::mat4 model)
 {
-    
+    // Le modèle est mis à l'échelle
+    model = glm::scale(  model, glm::vec3( m.scale*3.5f ) ) ;
+
+     // Le modele subit une rotation suivant l'axe z.
+    glm::mat4 rot=glm::rotate( glm::mat4( 1.0f ), glm::degrees( angle ), glm::vec3( 0.0f, 1.0f, 0.0f ) );
+
+    model = glm::rotate( glm::mat4( 1.0f ), glm::degrees( angle ), glm::vec3( 0.0f, 1.0f, 0.0f ) ) * model;
+
+    // Calcul de la matrice mvp.
+    mvp = proj * view * model;
+    // tester aussi:  (quelle différence?)
+    //rep.trace_repere(proj*  view *rot);
+    rep.trace_repere(proj*  view);
+    glUseProgram( m.shader.progid );// Choix du shader à appliquer.
+    glUniformMatrix4fv( m.shader.mid , 1, GL_FALSE, &model[0][0]);// Passage de la matrice mvp au shader.
+    glUniformMatrix4fv( m.shader.vid , 1, GL_FALSE, &view[0][0]);
+    glUniformMatrix4fv( m.shader.pid , 1, GL_FALSE, &proj[0][0]);
+
+    glm::vec3 LightPosition = glm::vec3(0.0f, 5.0f, 5.0f);
+    glUniform3fv( m.shader.LightID, 1, &LightPosition[0]);
+    glBindVertexArray( m.vaoids );//Choix du vao
+    glDrawElements( GL_TRIANGLES, m.nbtriangles*3, GL_UNSIGNED_INT, 0 );
+    check_gl_error(); // pour le debugage d'openGL
+
 }
+
+    
+
 
 void display()
       {
@@ -108,6 +135,7 @@ void display()
     displayMesh(maillages[3], model);
 
     glutSwapBuffers();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 
@@ -165,9 +193,13 @@ void special( int key, int x, int y )
 
 maillage initVAOs( unsigned int progid, const std::string & meshpath )
 {
+
+    maillage CurentMaillage;
+    CurentMaillage.shader.progid = progid;
+
     unsigned int vboids[ 4 ];
 
-    std::ifstream ifs( concat(MY_SHADER_PATH, meshpath ));
+    std::ifstream ifs( std::string(MY_SHADER_PATH) + meshpath);
     if (!ifs)
     {
         throw std::runtime_error("can't find the meshe!! Check the name and the path of this file? ");
@@ -287,8 +319,8 @@ std::cout<<scale;
 
 check_gl_error();
     // Génération d'un Vertex Array Object contenant 3 Vertex Buffer Objects.
-    glGenVertexArrays( 1, &vaoids[ 0 ] );
-    glBindVertexArray( vaoids[ 0 ] );
+    glGenVertexArrays(1, &CurentMaillage.vaoids);
+    glBindVertexArray(CurentMaillage.vaoids);
 
     // Génération de 4 VBO.
     glGenBuffers( 4, vboids );
@@ -328,99 +360,110 @@ check_gl_error();
     glVertexAttribPointer( normal, 3, GL_FLOAT, GL_TRUE, 0, 0 );
     glEnableVertexAttribArray( normal );
 check_gl_error();
-    glBindVertexArray( 0 );
+    
+
+
+    CurentMaillage.x = x;
+    CurentMaillage.y = y;
+    CurentMaillage.z = z;
+    CurentMaillage.scale = scale;
+    CurentMaillage.nbtriangles = nbtriangles;
+
+    glBindVertexArray(0);
+    return CurentMaillage;
 }
 
 
-shaderProg initShaders(const std::string & vertpath, const std::string & fragpath)
+shaderProg initShaders(const std::string &vertPath,
+                       const std::string &fragPath)
 {
-    unsigned int vsid, fsid;
-    int status;
-    int logsize;
-    std::string log;
-
-   std::ifstream vs_ifs( concat(MY_SHADER_PATH, vertpath) );
-   std::ifstream fs_ifs( concat(MY_SHADER_PATH, fragpath) );
-
-
-
-    auto begin = vs_ifs.tellg();
-    vs_ifs.seekg( 0, std::ios::end );
-    auto end = vs_ifs.tellg();
-    vs_ifs.seekg( 0, std::ios::beg );
-    auto size = end - begin;
-
-    std::string vs;
-    vs.resize( size );
-    vs_ifs.read( &vs[ 0 ], size );
-
-    begin = fs_ifs.tellg();
-    fs_ifs.seekg( 0, std::ios::end );
-    end = fs_ifs.tellg();
-    fs_ifs.seekg( 0, std::ios::beg );
-    size = end - begin;
-
-    std::string fs;
-    fs.resize( size );
-    fs_ifs.read( &fs[0], size );
-
-    vsid = glCreateShader( GL_VERTEX_SHADER );
-    char const * vs_char = vs.c_str();
-    glShaderSource( vsid, 1, &vs_char, nullptr );
-    glCompileShader( vsid );
-
-    // Get shader compilation status.
-    glGetShaderiv( vsid, GL_COMPILE_STATUS, &status );
-
-    if( !status )
-    {
-        std::cerr << "Error: vertex shader compilation failed.\n";
-        glGetShaderiv( vsid, GL_INFO_LOG_LENGTH, &logsize );
-        log.resize( logsize );
-        glGetShaderInfoLog( vsid, log.size(), &logsize, &log[0] );
-        std::cerr << log << std::endl;
-    }
-
-    fsid = glCreateShader( GL_FRAGMENT_SHADER );
-    char const * fs_char = fs.c_str();
-    glShaderSource( fsid, 1, &fs_char, nullptr );
-    glCompileShader( fsid );
-
-    // Get shader compilation status.
-    glGetShaderiv( fsid, GL_COMPILE_STATUS, &status );
-
-    if( !status )
-    {
-        std::cerr << "Error: fragment shader compilation failed.\n";
-        glGetShaderiv( fsid, GL_INFO_LOG_LENGTH, &logsize );
-        log.resize( logsize );
-        glGetShaderInfoLog( fsid, log.size(), &logsize, &log[0] );
-        std::cerr << log << std::endl;
-    }
-
-    progid = glCreateProgram();
-
-    glAttachShader( progid, vsid );
-    glAttachShader( progid, fsid );
-
-    glLinkProgram( progid );
-
-    glUseProgram( progid );
-
     shaderProg shader;
-    shader.progid = progid;
-    shader.mid = glGetUniformLocation( progid, "model" );
-    shader.vid = glGetUniformLocation( progid, "view" );
-    shader.pid = glGetUniformLocation( progid, "proj" );
-    shader.LightID = glGetUniformLocation( progid, "lightpos" );
 
-    mvpid = glGetUniformLocation( progid, "mvp" );
-    idproj = glGetUniformLocation( progid, "proj" );
-    idview = glGetUniformLocation( progid, "view" );
-    idmodel = glGetUniformLocation( progid, "model" );
+  
+    std::ifstream vs_ifs(std::string(MY_SHADER_PATH) + vertPath);
+    std::ifstream fs_ifs(std::string(MY_SHADER_PATH) + fragPath);
+    
+
+    if (!vs_ifs || !fs_ifs)
+    {
+        std::cerr << "Erreur ouverture shader : "
+                  << vertPath << " / " << fragPath << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    std::stringstream vs_ss, fs_ss;
+    vs_ss << vs_ifs.rdbuf();
+    fs_ss << fs_ifs.rdbuf();
+
+    std::string vs_src = vs_ss.str();
+    std::string fs_src = fs_ss.str();
+
+    const char* vshaderSrc = vs_src.c_str();
+    const char* fshaderSrc = fs_src.c_str();
+
+    // === 2. Compilation vertex shader ===
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, 1, &vshaderSrc, nullptr);
+    glCompileShader(vs);
+
+    GLint success;
+    glGetShaderiv(vs, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        char log[1024];
+        glGetShaderInfoLog(vs, 1024, nullptr, log);
+        std::cerr << "Vertex shader error:\n" << log << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // === 3. Compilation fragment shader ===
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, 1, &fshaderSrc, nullptr);
+    glCompileShader(fs);
+
+    glGetShaderiv(fs, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        char log[1024];
+        glGetShaderInfoLog(fs, 1024, nullptr, log);
+        std::cerr << "Fragment shader error:\n" << log << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // === 4. Link du programme ===
+    shader.progid = glCreateProgram();
+    glAttachShader(shader.progid, vs);
+    glAttachShader(shader.progid, fs);
+    glLinkProgram(shader.progid);
+
+    glGetProgramiv(shader.progid, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        char log[1024];
+        glGetProgramInfoLog(shader.progid, 1024, nullptr, log);
+        std::cerr << "Shader link error:\n" << log << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // === 5. Nettoyage shaders ===
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    // === 6. Récupération des uniforms ===
+    shader.mid = glGetUniformLocation(shader.progid, "Model");
+    shader.vid = glGetUniformLocation(shader.progid, "View");
+    shader.pid = glGetUniformLocation(shader.progid, "Projection");
+    shader.LightID = glGetUniformLocation(shader.progid, "LightPosition");
+
+    // Sécurité minimale
+    if (shader.mid < 0 || shader.vid < 0 || shader.pid < 0)
+    {
+        std::cerr << "Uniform manquant dans le shader !" << std::endl;
+    }
 
     return shader;
 }
+
 
 
 int main( int argc, char * argv[] )
@@ -458,15 +501,15 @@ glutInitContextVersion( 3, 2 );
     
     glEnable(GL_DEPTH_TEST);
 check_gl_error();
+
     shaders[0]=initShaders("/shaders/phong.vert.glsl","/shaders/phong.frag.glsl");
     shaders[1]=initShaders("/shaders/phong.vert.glsl","/shaders/toon.frag.glsl");
     shaders[2]=initShaders("/shaders/phong.vert.glsl","/shaders/phongVert.frag.glsl");
     shaders[3]=initShaders("/shaders/phong.vert.glsl","/shaders/phongRouge.frag.glsl");
-    check_gl_error();
-    maillages[0]=initVAOs(shaders[0],"/meshes/space_shuttle2.off");
-    maillages[1]=initVAOs(shaders[1],"/meshes/space_station2.off");
-    maillages[2]=initVAOs(shaders[2],"/meshes/milleniumfalcon.off");
-    maillages[3]=initVAOs(shaders[3],"/meshes/rabbit.off");
+    maillages[0] = initVAOs(shaders[0].progid, "/meshes/space_shuttle2.off");
+    maillages[1] = initVAOs(shaders[1].progid, "/meshes/space_station2.off");
+    maillages[2] = initVAOs(shaders[2].progid, "/meshes/milleniumfalcon.off");
+    maillages[3] = initVAOs(shaders[3].progid, "/meshes/rabbit.off");
     check_gl_error();
     rep.init();
     check_gl_error();
