@@ -374,15 +374,16 @@ check_gl_error();
 }
 
 
-shaderProg initShaders(const std::string &vertPath,
-                       const std::string &fragPath)
+shaderProg initShaders(const std::string &vertPath,const std::string &fragPath)
 {
     shaderProg shader;
 
   
-    std::ifstream vs_ifs(std::string(MY_SHADER_PATH) + vertPath);
-    std::ifstream fs_ifs(std::string(MY_SHADER_PATH) + fragPath);
-    
+    std::string shadVert="/shaders/basic.vert.glsl";
+    std::string shadFrag="/shaders/basic.frag.glsl";
+    std::ifstream vs_ifs( MY_SHADER_PATH+ shadVert);
+    std::ifstream fs_ifs( MY_SHADER_PATH+ shadFrag );
+
 
     if (!vs_ifs || !fs_ifs)
     {
@@ -450,9 +451,9 @@ shaderProg initShaders(const std::string &vertPath,
     glDeleteShader(fs);
 
     // === 6. Récupération des uniforms ===
-    shader.mid = glGetUniformLocation(shader.progid, "Model");
-    shader.vid = glGetUniformLocation(shader.progid, "View");
-    shader.pid = glGetUniformLocation(shader.progid, "Projection");
+    shader.mid = glGetUniformLocation(shader.progid, "model");
+    shader.vid = glGetUniformLocation(shader.progid, "view");
+    shader.pid = glGetUniformLocation(shader.progid, "proj");
     shader.LightID = glGetUniformLocation(shader.progid, "LightPosition");
 
     // Sécurité minimale
