@@ -655,7 +655,6 @@ CMakeFiles/td.dir/td6.cpp.o: /home/iut45/Etudiants/o22306517/Bureau/BUT3/Prog3D/
   /usr/include/c++/13/bits/refwrap.h \
   /usr/include/c++/13/bits/requires_hosted.h \
   /usr/include/c++/13/bits/specfun.h \
-  /usr/include/c++/13/bits/sstream.tcc \
   /usr/include/c++/13/bits/std_abs.h \
   /usr/include/c++/13/bits/stl_algobase.h \
   /usr/include/c++/13/bits/stl_bvector.h \
@@ -707,7 +706,6 @@ CMakeFiles/td.dir/td6.cpp.o: /home/iut45/Etudiants/o22306517/Bureau/BUT3/Prog3D/
   /usr/include/c++/13/new \
   /usr/include/c++/13/ostream \
   /usr/include/c++/13/pstl/pstl_config.h \
-  /usr/include/c++/13/sstream \
   /usr/include/c++/13/stdexcept \
   /usr/include/c++/13/stdlib.h \
   /usr/include/c++/13/streambuf \
@@ -996,8 +994,6 @@ CMakeFiles/td.dir/td6.cpp.o: /home/iut45/Etudiants/o22306517/Bureau/BUT3/Prog3D/
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h
 
-
-/usr/include/c++/13/bits/sstream.tcc:
 
 /usr/include/GL/freeglut_ucall.h:
 
@@ -1594,8 +1590,6 @@ config.h:
 /usr/include/c++/13/bits/charconv.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
-
-/usr/include/c++/13/sstream:
 
 /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
 

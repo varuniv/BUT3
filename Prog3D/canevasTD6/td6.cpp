@@ -2,7 +2,6 @@
 #include <vector>
 #include <array>
 #include <fstream>
-#include <sstream> 
 
 #if defined(__APPLE__)
 #define GL_SILENCE_DEPRECATION
@@ -30,6 +29,10 @@ repere rep(1.0);
 
 unsigned int progid;
 unsigned int mvpid;
+unsigned int mid;
+unsigned int vid;
+unsigned int pid;
+unsigned int LightID;
 unsigned int idmodel;
 unsigned int idview;
 unsigned int idproj;
@@ -51,6 +54,8 @@ unsigned int nbtriangles;
 float x, y, z;
 
 std::array< float, 3 > eye = { 0.0f, 0.0f, 5.0f };
+
+
 
 #define NBMESHES 4
 
@@ -76,39 +81,297 @@ struct maillage
 
 } maillages[NBMESHES];
 
-void displayMesh(maillage &m, glm::mat4 model)
+
+
+void vClavier(unsigned char key, int x, int y)
 {
-    // Le modèle est mis à l'échelle
-    model = glm::scale(  model, glm::vec3( m.scale*3.5f ) ) ;
+	switch (key)
+    {   
+        case 'q' :
+        case 'Q' :
+        case 27  : // Touche ESC
+            exit (0);
+            break;
 
-     // Le modele subit une rotation suivant l'axe z.
-    glm::mat4 rot=glm::rotate( glm::mat4( 1.0f ), glm::degrees( angle ), glm::vec3( 0.0f, 1.0f, 0.0f ) );
+        default :
+            printf(" Touche: %c\n Souris a: %d %d \n",key,x,y); 
+            break;
+    }
+}
+shaderProg initShaders(std::string chemin_vert, std::string chemin_frag)
+{
+    unsigned int vsid, fsid;
+    int status;
+    int logsize;
+    std::string log;
 
-    model = glm::rotate( glm::mat4( 1.0f ), glm::degrees( angle ), glm::vec3( 0.0f, 1.0f, 0.0f ) ) * model;
+    std::ifstream vs_ifs(MY_SHADER_PATH + chemin_vert);
+    std::ifstream fs_ifs(MY_SHADER_PATH + chemin_frag);
 
-    // Calcul de la matrice mvp.
-    mvp = proj * view * model;
-    // tester aussi:  (quelle différence?)
-    //rep.trace_repere(proj*  view *rot);
-    rep.trace_repere(proj*  view);
-    glUseProgram( m.shader.progid );// Choix du shader à appliquer.
-    glUniformMatrix4fv( m.shader.mid , 1, GL_FALSE, &model[0][0]);// Passage de la matrice mvp au shader.
-    glUniformMatrix4fv( m.shader.vid , 1, GL_FALSE, &view[0][0]);
-    glUniformMatrix4fv( m.shader.pid , 1, GL_FALSE, &proj[0][0]);
+    auto begin = vs_ifs.tellg();
+    vs_ifs.seekg( 0, std::ios::end );
+    auto end = vs_ifs.tellg();
+    vs_ifs.seekg( 0, std::ios::beg );
+    auto size = end - begin;
 
-    glm::vec3 LightPosition = glm::vec3(0.0f, 5.0f, 5.0f);
-    glUniform3fv( m.shader.LightID, 1, &LightPosition[0]);
-    glBindVertexArray( m.vaoids );//Choix du vao
-    glDrawElements( GL_TRIANGLES, m.nbtriangles*3, GL_UNSIGNED_INT, 0 );
-    check_gl_error(); // pour le debugage d'openGL
+    std::string vs;
+    vs.resize( size );
+    vs_ifs.read( &vs[ 0 ], size );
 
+    begin = fs_ifs.tellg();
+    fs_ifs.seekg( 0, std::ios::end );
+    end = fs_ifs.tellg();
+    fs_ifs.seekg( 0, std::ios::beg );
+    size = end - begin;
+
+    std::string fs;
+    fs.resize( size );
+    fs_ifs.read( &fs[0], size );
+
+    vsid = glCreateShader( GL_VERTEX_SHADER );
+    char const * vs_char = vs.c_str();
+    glShaderSource( vsid, 1, &vs_char, nullptr );
+    glCompileShader( vsid );
+
+    // Get shader compilation status.
+    glGetShaderiv( vsid, GL_COMPILE_STATUS, &status );
+
+    if( !status )
+    {
+        std::cerr << "Error: vertex shader compilation failed.\n";
+        glGetShaderiv( vsid, GL_INFO_LOG_LENGTH, &logsize );
+        log.resize( logsize );
+        glGetShaderInfoLog( vsid, log.size(), &logsize, &log[0] );
+        std::cerr << log << std::endl;
+    }
+
+    fsid = glCreateShader( GL_FRAGMENT_SHADER );
+    char const * fs_char = fs.c_str();
+    glShaderSource( fsid, 1, &fs_char, nullptr );
+    glCompileShader( fsid );
+
+    // Get shader compilation status.
+    glGetShaderiv( fsid, GL_COMPILE_STATUS, &status );
+
+    if( !status )
+    {
+        std::cerr << "Error: fragment shader compilation failed.\n";
+        glGetShaderiv( fsid, GL_INFO_LOG_LENGTH, &logsize );
+        log.resize( logsize );
+        glGetShaderInfoLog( fsid, log.size(), &logsize, &log[0] );
+        std::cerr << log << std::endl;
+    }
+
+    progid = glCreateProgram();
+
+    glAttachShader( progid, vsid );
+    glAttachShader( progid, fsid );
+
+    glLinkProgram( progid );
+
+    glUseProgram( progid );
+
+    mvpid = glGetUniformLocation( progid, "mvp" );
+    mid = glGetUniformLocation( progid, "model" );
+    vid = glGetUniformLocation( progid, "view" );
+    pid = glGetUniformLocation( progid, "proj" );
+    LightID = glGetUniformLocation( progid, "light" );
+    return shaderProg{progid, mid, vid, pid, LightID};
 }
 
+maillage initVAOs(shaderProg shader, std::string chemin_mesh)
+{
+    unsigned int vboids[ 3 ];
+    maillage newmaillage;
+
+    newmaillage.shader=shader;
+
+    std::ifstream ifs( MY_SHADER_PATH + chemin_mesh );
+    if (!ifs)
+    {
+        throw std::runtime_error("can't find the meshe!! Check the name and the path of this file? ");
+    }
+
+    
+    std::string off;
+
+    unsigned int nbpoints, tmp;
+
+    ifs >> off;
+    ifs >> nbpoints;
+    ifs >>  newmaillage.nbtriangles;
+    ifs >> tmp;
+
+    std::cout<<newmaillage.nbtriangles<<std::endl;
+    std::vector< float > vertices( nbpoints * 3 );
+    std::vector< float > colors( nbpoints * 3 );
+    std::vector< unsigned int > indices( newmaillage.nbtriangles *3 );
+    std::vector< float > normals( nbpoints * 3 );
+
+    //std::fill( std::begin( normals ), std::end( normals ), 0.0f );
+
+    for( unsigned int i = 0 ; i < vertices.size() ; ++i) {
+        ifs >> vertices[ i ];
+
+    }
+
+    for( unsigned int i = 0 ; i < newmaillage.nbtriangles ; ++i) {
+        ifs >> tmp;
+        ifs >> indices[ i * 3 ];
+        ifs >> indices[ i * 3 + 1 ];
+        ifs >> indices[ i * 3 + 2 ];
+    }
+
+    /**
+     * Calcul de la boîte englobante du modèle
+     */
+    float dx, dy, dz;
+    float xmin, xmax, ymin, ymax, zmin, zmax;
+
+    xmin = xmax = vertices[0];
+    ymin = ymax = vertices[1];
+    zmin = zmax = vertices[2];
+    for(unsigned int i = 1 ; i < nbpoints ; ++i) {
+        if(xmin > vertices[i*3]) xmin = vertices[i*3];
+        if(xmax < vertices[i*3]) xmax = vertices[i*3];
+        if(ymin > vertices[i*3+1]) ymin = vertices[i*3+1];
+        if(ymax < vertices[i*3+1]) ymax = vertices[i*3+1];
+        if(zmin > vertices[i*3+2]) zmin = vertices[i*3+2];
+        if(zmax < vertices[i*3+2]) zmax = vertices[i*3+2];
+    }
+
+    // calcul du centre de la boîte englobante
+
+    newmaillage.x = (xmax + xmin)/2.0f;
+    newmaillage.y = (ymax + ymin)/2.0f;
+    newmaillage.z = (zmax + zmin)/2.0f;
+
+    // calcul des dimensions de la boîte englobante
+
+    dx = xmax - xmin;
+    dy = ymax - ymin;
+    dz = zmax - zmin;
+
+    // calcul du coefficient de mise à l'échelle
+
+    newmaillage.scale = 1.0f/fmax(dx, fmax(dy, dz));
+
+    // Calcul des normales.
+    for( std::size_t i = 0 ; i < indices.size() ; i+=3 )
+    {
+        auto x0 = vertices[ 3 * indices [ i ]     ] - vertices[ 3 * indices [ i+1 ]     ];
+        auto y0 = vertices[ 3 * indices [ i ] + 1 ] - vertices[ 3 * indices [ i+1 ] + 1 ];
+        auto z0 = vertices[ 3 * indices [ i ] + 2 ] - vertices[ 3 * indices [ i+1 ] + 2 ];
+
+        auto x1 = vertices[ 3 * indices [ i ]     ] - vertices[ 3 * indices [ i+2 ]     ];
+        auto y1 = vertices[ 3 * indices [ i ] + 1 ] - vertices[ 3 * indices [ i+2 ] + 1 ];
+        auto z1 = vertices[ 3 * indices [ i ] + 2 ] - vertices[ 3 * indices [ i+2 ] + 2 ];
+
+        auto x01 = y0 * z1 - y1 * z0;
+        auto y01 = z0 * x1 - z1 * x0;
+        auto z01 = x0 * y1 - x1 * y0;
+
+        auto norminv = 1.0f / std::sqrt( x01 * x01 + y01 * y01 + z01 * z01 );
+        x01 *= norminv;
+        y01 *= norminv;
+        z01 *= norminv;
+
+        normals[ 3 * indices[ i ]     ] += x01;
+        normals[ 3 * indices[ i ] + 1 ] += y01;
+        normals[ 3 * indices[ i ] + 2 ] += z01;
+
+        normals[ 3 * indices[ i + 1 ]     ] += x01;
+        normals[ 3 * indices[ i + 1 ] + 1 ] += y01;
+        normals[ 3 * indices[ i + 1 ] + 2 ] += z01;
+
+        normals[ 3 * indices[ i + 2 ]     ] += x01;
+        normals[ 3 * indices[ i + 2 ] + 1 ] += y01;
+        normals[ 3 * indices[ i + 2 ] + 2 ] += z01;
+    }
+
+    for( std::size_t i = 0 ; i < normals.size() ; i+=3 )
+    {
+        auto & x = normals[ i     ];
+        auto & y = normals[ i + 1 ];
+        auto & z = normals[ i + 2 ];
+
+        auto norminv = 1.0f / std::sqrt( x * x + y * y + z * z );
+
+        x *= norminv;
+        y *= norminv;
+        z *= norminv;
+    }
+
+    check_gl_error();
+    // Génération d'un Vertex Array Object contenant 3 Vertex Buffer Objects.
+    glGenVertexArrays( 1, &newmaillage.vaoids);
+    glBindVertexArray( newmaillage.vaoids );
+
+    // Génération de 4 VBO.
+    glGenBuffers( 3, vboids );
+
+    // VBO contenant les sommets.
+
+    glBindBuffer( GL_ARRAY_BUFFER, vboids[ 0 ] );
+    glBufferData( GL_ARRAY_BUFFER, vertices.size() * sizeof( float ), vertices.data(), GL_STATIC_DRAW );
+
+    // L'attribut in_pos du vertex shader est associé aux données de ce VBO.
+    auto pos = glGetAttribLocation( progid, "in_pos" );
+    glVertexAttribPointer( pos, 3, GL_FLOAT, GL_FALSE, 0, 0 );
+    glEnableVertexAttribArray( pos );
+    check_gl_error();
+    // VBO contenant les couleurs.
+
+    // glBindBuffer( GL_ARRAY_BUFFER, vboids[ 1 ] );
+    // glBufferData( GL_ARRAY_BUFFER, colors.size() * sizeof( float ), colors.data(), GL_STATIC_DRAW );
+
+    // L'attribut in_color du vertex shader est associé aux données de ce VBO.
+    // auto color = glGetAttribLocation( progid, "in_color" );
+    // glVertexAttribPointer( color, 3, GL_FLOAT, GL_FALSE, 0, 0 );
+    // glEnableVertexAttribArray( color );
+
+    check_gl_error();
+    // VBO contenant les indices.
+
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vboids[ 1 ] );
+    glBufferData( GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof( unsigned int ), indices.data(), GL_STATIC_DRAW );
+    check_gl_error();
+    // VBO contenant les normales.
+
+    glBindBuffer( GL_ARRAY_BUFFER, vboids[ 2 ] );
+    glBufferData( GL_ARRAY_BUFFER, normals.size() * sizeof( float ), normals.data(), GL_STATIC_DRAW );
+
+    auto normal = glGetAttribLocation( progid, "in_normal" );
+    glVertexAttribPointer( normal, 3, GL_FLOAT, GL_TRUE, 0, 0 );
+    glEnableVertexAttribArray( normal );
+    check_gl_error();
+    glBindVertexArray( 0 );
+
+    return newmaillage;
+}
+
+void displayMesh(maillage maillage, glm::mat4 model) {
+
+    model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f)); // Rotation sur l'axe Y
     
 
+    model = model * glm::scale(glm::mat4(1.0f), glm::vec3(maillage.scale)) 
+                  * glm::translate(glm::mat4(1.0f), glm::vec3(-maillage.x, -maillage.y, -maillage.z));
+    
+    mvp = proj * view * model;
 
-void display()
-      {
+    glUseProgram(maillage.shader.progid);
+    glUniformMatrix4fv(mvpid, 1, GL_FALSE, &mvp[0][0]);
+    glUniformMatrix4fv(maillage.shader.mid, 1, GL_FALSE, &model[0][0]);
+    glUniformMatrix4fv(maillage.shader.vid, 1, GL_FALSE, &view[0][0]);
+    glUniformMatrix4fv(maillage.shader.pid, 1, GL_FALSE, &proj[0][0]);
+
+    glBindVertexArray(maillage.vaoids); 
+    glDrawElements(GL_TRIANGLES, maillage.nbtriangles * 3, GL_UNSIGNED_INT, 0);
+
+    check_gl_error(); 
+}
+void display(){
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     view = glm::lookAt( glm::vec3( eye[ 0 ], eye[ 1 ], eye[ 2 ] ),
       glm::vec3( eye[ 0 ], eye[ 1 ], eye[ 2 ]-1.0f ),
@@ -135,28 +398,16 @@ void display()
     displayMesh(maillages[3], model);
 
     glutSwapBuffers();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 
 void idle()
 {
-    angle += 0.0001f;
+    angle += 0.01f;
     if( angle >= 360.0f )
     {
         angle = 0.0f;
     }
-
-//    if( scale <= 0.0f )
-//    {
-//        inc = 0.1f;
-//    }
-//    else if( scale > 2.0f )
-//    {
-//        inc = -0.1f;
-//    }
-//
-//    scale += inc;
 
     glutPostRedisplay();
 }
@@ -191,18 +442,14 @@ void special( int key, int x, int y )
 }
 
 
-maillage initVAOs( unsigned int progid, const std::string & meshpath )
+void initVAOs()
 {
-
-    maillage CurentMaillage;
-    CurentMaillage.shader.progid = progid;
-
     unsigned int vboids[ 4 ];
 
-    std::ifstream ifs( std::string(MY_SHADER_PATH) + meshpath);
+    std::ifstream ifs( concat(MY_SHADER_PATH, "/meshes/milleniumfalcon.off/milleniumfalcon.off" ));
     if (!ifs)
     {
-        throw std::runtime_error("can't find the meshe!! Check the name and the path of this file? ");
+        throw std::runtime_error("can't find the meshe");
     }
 
     
@@ -319,8 +566,8 @@ std::cout<<scale;
 
 check_gl_error();
     // Génération d'un Vertex Array Object contenant 3 Vertex Buffer Objects.
-    glGenVertexArrays(1, &CurentMaillage.vaoids);
-    glBindVertexArray(CurentMaillage.vaoids);
+    glGenVertexArrays( 1, &vaoids[ 0 ] );
+    glBindVertexArray( vaoids[ 0 ] );
 
     // Génération de 4 VBO.
     glGenBuffers( 4, vboids );
@@ -360,111 +607,90 @@ check_gl_error();
     glVertexAttribPointer( normal, 3, GL_FLOAT, GL_TRUE, 0, 0 );
     glEnableVertexAttribArray( normal );
 check_gl_error();
-    
-
-
-    CurentMaillage.x = x;
-    CurentMaillage.y = y;
-    CurentMaillage.z = z;
-    CurentMaillage.scale = scale;
-    CurentMaillage.nbtriangles = nbtriangles;
-
-    glBindVertexArray(0);
-    return CurentMaillage;
+    glBindVertexArray( 0 );
 }
 
 
-shaderProg initShaders(const std::string &vertPath,const std::string &fragPath)
+void initShaders()
 {
-    shaderProg shader;
+    unsigned int vsid, fsid;
+    int status;
+    int logsize;
+    std::string log;
 
-  
-    std::string shadVert="/shaders/basic.vert.glsl";
-    std::string shadFrag="/shaders/basic.frag.glsl";
-    std::ifstream vs_ifs( MY_SHADER_PATH+ shadVert);
-    std::ifstream fs_ifs( MY_SHADER_PATH+ shadFrag );
+   std::ifstream vs_ifs( concat(MY_SHADER_PATH, "/shaders/basic.vert.glsl") );
+   std::ifstream fs_ifs( concat(MY_SHADER_PATH, "/shaders/basic.frag.glsl") );
 
 
-    if (!vs_ifs || !fs_ifs)
+
+    auto begin = vs_ifs.tellg();
+    vs_ifs.seekg( 0, std::ios::end );
+    auto end = vs_ifs.tellg();
+    vs_ifs.seekg( 0, std::ios::beg );
+    auto size = end - begin;
+
+    std::string vs;
+    vs.resize( size );
+    vs_ifs.read( &vs[ 0 ], size );
+
+    begin = fs_ifs.tellg();
+    fs_ifs.seekg( 0, std::ios::end );
+    end = fs_ifs.tellg();
+    fs_ifs.seekg( 0, std::ios::beg );
+    size = end - begin;
+
+    std::string fs;
+    fs.resize( size );
+    fs_ifs.read( &fs[0], size );
+
+    vsid = glCreateShader( GL_VERTEX_SHADER );
+    char const * vs_char = vs.c_str();
+    glShaderSource( vsid, 1, &vs_char, nullptr );
+    glCompileShader( vsid );
+
+    // Get shader compilation status.
+    glGetShaderiv( vsid, GL_COMPILE_STATUS, &status );
+
+    if( !status )
     {
-        std::cerr << "Erreur ouverture shader : "
-                  << vertPath << " / " << fragPath << std::endl;
-        exit(EXIT_FAILURE);
+        std::cerr << "Error: vertex shader compilation failed.\n";
+        glGetShaderiv( vsid, GL_INFO_LOG_LENGTH, &logsize );
+        log.resize( logsize );
+        glGetShaderInfoLog( vsid, log.size(), &logsize, &log[0] );
+        std::cerr << log << std::endl;
     }
 
-    std::stringstream vs_ss, fs_ss;
-    vs_ss << vs_ifs.rdbuf();
-    fs_ss << fs_ifs.rdbuf();
+    fsid = glCreateShader( GL_FRAGMENT_SHADER );
+    char const * fs_char = fs.c_str();
+    glShaderSource( fsid, 1, &fs_char, nullptr );
+    glCompileShader( fsid );
 
-    std::string vs_src = vs_ss.str();
-    std::string fs_src = fs_ss.str();
+    // Get shader compilation status.
+    glGetShaderiv( fsid, GL_COMPILE_STATUS, &status );
 
-    const char* vshaderSrc = vs_src.c_str();
-    const char* fshaderSrc = fs_src.c_str();
-
-    // === 2. Compilation vertex shader ===
-    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, &vshaderSrc, nullptr);
-    glCompileShader(vs);
-
-    GLint success;
-    glGetShaderiv(vs, GL_COMPILE_STATUS, &success);
-    if (!success)
+    if( !status )
     {
-        char log[1024];
-        glGetShaderInfoLog(vs, 1024, nullptr, log);
-        std::cerr << "Vertex shader error:\n" << log << std::endl;
-        exit(EXIT_FAILURE);
+        std::cerr << "Error: fragment shader compilation failed.\n";
+        glGetShaderiv( fsid, GL_INFO_LOG_LENGTH, &logsize );
+        log.resize( logsize );
+        glGetShaderInfoLog( fsid, log.size(), &logsize, &log[0] );
+        std::cerr << log << std::endl;
     }
 
-    // === 3. Compilation fragment shader ===
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fshaderSrc, nullptr);
-    glCompileShader(fs);
+    progid = glCreateProgram();
 
-    glGetShaderiv(fs, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        char log[1024];
-        glGetShaderInfoLog(fs, 1024, nullptr, log);
-        std::cerr << "Fragment shader error:\n" << log << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    glAttachShader( progid, vsid );
+    glAttachShader( progid, fsid );
 
-    // === 4. Link du programme ===
-    shader.progid = glCreateProgram();
-    glAttachShader(shader.progid, vs);
-    glAttachShader(shader.progid, fs);
-    glLinkProgram(shader.progid);
+    glLinkProgram( progid );
 
-    glGetProgramiv(shader.progid, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        char log[1024];
-        glGetProgramInfoLog(shader.progid, 1024, nullptr, log);
-        std::cerr << "Shader link error:\n" << log << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    glUseProgram( progid );
 
-    // === 5. Nettoyage shaders ===
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-
-    // === 6. Récupération des uniforms ===
-    shader.mid = glGetUniformLocation(shader.progid, "model");
-    shader.vid = glGetUniformLocation(shader.progid, "view");
-    shader.pid = glGetUniformLocation(shader.progid, "proj");
-    shader.LightID = glGetUniformLocation(shader.progid, "LightPosition");
-
-    // Sécurité minimale
-    if (shader.mid < 0 || shader.vid < 0 || shader.pid < 0)
-    {
-        std::cerr << "Uniform manquant dans le shader !" << std::endl;
-    }
-
-    return shader;
+    mvpid = glGetUniformLocation( progid, "mvp" );
+    idproj = glGetUniformLocation( progid, "proj" );
+    idview = glGetUniformLocation( progid, "view" );
+    idmodel = glGetUniformLocation( progid, "model" );
 }
-
 
 
 int main( int argc, char * argv[] )
@@ -507,10 +733,10 @@ check_gl_error();
     shaders[1]=initShaders("/shaders/phong.vert.glsl","/shaders/toon.frag.glsl");
     shaders[2]=initShaders("/shaders/phong.vert.glsl","/shaders/phongVert.frag.glsl");
     shaders[3]=initShaders("/shaders/phong.vert.glsl","/shaders/phongRouge.frag.glsl");
-    maillages[0] = initVAOs(shaders[0].progid, "/meshes/space_shuttle2.off");
-    maillages[1] = initVAOs(shaders[1].progid, "/meshes/space_station2.off");
-    maillages[2] = initVAOs(shaders[2].progid, "/meshes/milleniumfalcon.off");
-    maillages[3] = initVAOs(shaders[3].progid, "/meshes/rabbit.off");
+    maillages[0] = initVAOs(shaders[0], "/meshes/space_shuttle2.off");
+    maillages[1] = initVAOs(shaders[1], "/meshes/space_station2.off");
+    maillages[2] = initVAOs(shaders[2], "/meshes/milleniumfalcon.off");
+    maillages[3] = initVAOs(shaders[3], "/meshes/rabbit.off");
     check_gl_error();
     rep.init();
     check_gl_error();
