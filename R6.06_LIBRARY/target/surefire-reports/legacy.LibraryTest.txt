@@ -1,0 +1,11 @@
+-------------------------------------------------------------------------------
+Test set: legacy.LibraryTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.051 s <<< FAILURE! -- in legacy.LibraryTest
+legacy.LibraryTest.CreationLibraryTest -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError
+	at legacy.LibraryTest.CreationLibraryTest(LibraryTest.java:17)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
