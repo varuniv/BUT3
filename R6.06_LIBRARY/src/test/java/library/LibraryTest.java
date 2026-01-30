@@ -13,25 +13,25 @@ public class LibraryTest {
     
     @BeforeEach
     public void setup() {
-        Library.books.clear();
-        Library.loans.clear();
+        Library.getBooks().clear();
+        Library.getLoans().clear();
     }
     @BeforeAll
     public static void CreationLibraryTest() {
-        Library.books.clear();
-        Library.loans.clear();
+        Library.getBooks().clear();
+        Library.getLoans().clear();
         Library library = new Library();
-        assert Library.books != null;
-        assert Library.loans != null;
-        System.out.println(Library.books);
-        assert Library.books.isEmpty();
-        assert Library.loans.isEmpty();
+        assert Library.getBooks() != null;
+        assert Library.getLoans() != null;
+        System.out.println(Library.getBooks());
+        assert Library.getBooks().isEmpty();
+        assert Library.getLoans().isEmpty();
     }
 
     @Test
     public void ByIsbnTest() {
         Book book = new Book("978-3-16-148410-0", "The Alchimist", "Paulo Coelho", 1988);
-        Library.books.add(book);
+        Library.getBooks().add(book);
         Book foundBook = Library.byIsbn("978-3-16-148410-0");
         Book notFoundBook = Library.byIsbn("000-0-00-000000-0");
         assert notFoundBook == null;
@@ -43,8 +43,8 @@ public class LibraryTest {
     public void IsBorrowedTest() {
         Book book = new Book("978-3-16-148410-0", "The Alchimist", "Paulo Coelho", 1988);
         Borrower borrower = new Borrower("Jean Pierre Polnareff");
-        Library.books.add(book);
-        Library.loans.put(book.getIsbn(), borrower);
+        Library.getBooks().add(book);
+        Library.getLoans().put(book.getIsbn(), borrower);
         assert Library.isBorrowed("978-3-16-148410-0") == true;
         assert Library.isBorrowed("978-0-14-118263-6") == false;
     }   
@@ -53,9 +53,9 @@ public class LibraryTest {
     public void DooubleAdditionTest() {
         Book book1 = new Book("978-3-16-148410-0", "The Alchimist", "Paulo Coelho", 1988);
         Book book2 = new Book("978-3-16-148410-0", "The Alchimist", "Paulo Coelho", 1988);
-        Library.books.add(book1);
-        Library.books.add(book2);
-        assert Library.books.size() == 2;
+        Library.getBooks().add(book1);
+        Library.getBooks().add(book2);
+        assert Library.getBooks().size() == 2;
     }
 
     

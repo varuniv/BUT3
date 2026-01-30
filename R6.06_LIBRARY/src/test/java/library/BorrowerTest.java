@@ -10,6 +10,6 @@ public class BorrowerTest {
     @Test
     public void CreationBorrowerTest() {
         Borrower borrower = new Borrower("Jean Pierre Polnareff");
-        assert borrower.name.equals("Jean Pierre Polnareff");
+        assert borrower.getName().equals("Jean Pierre Polnareff");
     }
 }
