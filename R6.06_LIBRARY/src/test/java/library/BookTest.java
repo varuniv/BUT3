@@ -1,4 +1,4 @@
-package legacy;
+package library;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

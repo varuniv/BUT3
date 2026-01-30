@@ -1,5 +1,7 @@
-package legacy;
+package library;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import library.Book;
@@ -9,11 +11,19 @@ import library.LibraryApp;
 
 public class LibraryTest {
     
-    @Test 
-    public void CreationLibraryTest() {
+    @BeforeEach
+    public void setup() {
+        Library.books.clear();
+        Library.loans.clear();
+    }
+    @BeforeAll
+    public static void CreationLibraryTest() {
+        Library.books.clear();
+        Library.loans.clear();
         Library library = new Library();
         assert Library.books != null;
         assert Library.loans != null;
+        System.out.println(Library.books);
         assert Library.books.isEmpty();
         assert Library.loans.isEmpty();
     }
@@ -23,6 +33,8 @@ public class LibraryTest {
         Book book = new Book("978-3-16-148410-0", "The Alchimist", "Paulo Coelho", 1988);
         Library.books.add(book);
         Book foundBook = Library.byIsbn("978-3-16-148410-0");
+        Book notFoundBook = Library.byIsbn("000-0-00-000000-0");
+        assert notFoundBook == null;
         assert foundBook != null;
         assert foundBook.getTitle().equals("The Alchimist");
     }

@@ -1,4 +1,4 @@
-package legacy;
+package library;
 
 import org.junit.jupiter.api.Test;
 

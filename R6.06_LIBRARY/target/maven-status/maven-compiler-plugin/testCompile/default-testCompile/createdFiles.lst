@@ -1,4 +1,4 @@
-legacy/BookTest.class
-legacy/LibraryTest.class
-legacy/BorrowerTest.class
-legacy/LibraryAppTest.class
+library/BorrowerTest.class
+library/LibraryAppTest.class
+library/LibraryTest.class
+library/BookTest.class
